@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { 
   FileText, 
   Search, 
@@ -22,6 +24,11 @@ import {
 const SystemLogs = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [logLevel, setLogLevel] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [displayCount, setDisplayCount] = useState(6);
+  
+  const { toast } = useToast();
 
   const logEntries = [
     {
@@ -126,6 +133,45 @@ const SystemLogs = () => {
     return <FileText className="h-4 w-4" />;
   };
 
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast({
+        title: "Logs Refreshed",
+        description: "Latest log entries have been loaded from all sources",
+      });
+    }, 1500);
+  };
+
+  const handleExport = () => {
+    toast({
+      title: "Export Started",
+      description: "System logs are being exported in JSON format",
+    });
+  };
+
+  const handleLoadMore = () => {
+    setDisplayCount(prev => prev + 6);
+    toast({
+      title: "Loading More Logs",
+      description: "Additional log entries are being loaded",
+    });
+  };
+
+  const filteredLogs = logEntries.filter(log => {
+    const matchesSearch = 
+      log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.component.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.details.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesLevel = logLevel === "all" || log.level.toLowerCase() === logLevel.toLowerCase();
+    const matchesSource = sourceFilter === "all" || log.source.toLowerCase().includes(sourceFilter.toLowerCase());
+    
+    return matchesSearch && matchesLevel && matchesSource;
+  }).slice(0, displayCount);
+
   return (
     <div className="space-y-6">
       
@@ -138,12 +184,12 @@ const SystemLogs = () => {
           <p className="text-muted-foreground">Real-time log monitoring and analysis across all system components</p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
@@ -207,20 +253,29 @@ const SystemLogs = () => {
               />
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-              <select 
-                className="px-3 py-2 bg-input/50 border border-border/50 rounded-md text-sm"
-                value={logLevel}
-                onChange={(e) => setLogLevel(e.target.value)}
-              >
-                <option value="all">All Levels</option>
-                <option value="error">Errors Only</option>
-                <option value="warn">Warnings+</option>
-                <option value="info">Info+</option>
-              </select>
+              <Select value={logLevel} onValueChange={setLogLevel}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  <SelectItem value="error">Errors Only</SelectItem>
+                  <SelectItem value="warn">Warnings</SelectItem>
+                  <SelectItem value="info">Info</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sources</SelectItem>
+                  <SelectItem value="web">Web Servers</SelectItem>
+                  <SelectItem value="database">Database</SelectItem>
+                  <SelectItem value="firewall">Firewall</SelectItem>
+                  <SelectItem value="api">API Gateway</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -228,7 +283,21 @@ const SystemLogs = () => {
 
       {/* Log Entries */}
       <div className="space-y-2">
-        {logEntries.map((log) => (
+        {filteredLogs.length === 0 ? (
+          <Card className="card-gradient border-border/50 text-center p-12">
+            <div className="flex flex-col items-center space-y-4">
+              <Search className="h-12 w-12 text-muted-foreground" />
+              <h3 className="text-xl font-semibold">No logs found</h3>
+              <p className="text-muted-foreground">
+                {searchTerm || logLevel !== "all" || sourceFilter !== "all"
+                  ? "Try adjusting your search or filter criteria"
+                  : "No logs match the current criteria"
+                }
+              </p>
+            </div>
+          </Card>
+        ) : (
+          filteredLogs.map((log) => (
           <Card key={log.id} className="card-gradient border-border/50 hover:border-primary/30 transition-colors">
             <CardContent className="p-4">
               <div className="flex items-start gap-4">
@@ -287,16 +356,19 @@ const SystemLogs = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Load More */}
-      <div className="text-center">
-        <Button variant="outline" className="glow-primary">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Load More Logs
-        </Button>
-      </div>
+      {filteredLogs.length > 0 && displayCount < logEntries.length && (
+        <div className="text-center">
+          <Button variant="outline" className="glow-primary" onClick={handleLoadMore}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Load More Logs ({Math.min(6, logEntries.length - displayCount)} more)
+          </Button>
+        </div>
+      )}
 
       {/* Real-time Status */}
       <Card className="card-gradient border-border/50">

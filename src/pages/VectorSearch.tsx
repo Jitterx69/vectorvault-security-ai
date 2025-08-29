@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import AdvancedFiltersModal from "@/components/modals/AdvancedFiltersModal";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Search, 
   Database, 
@@ -20,6 +22,10 @@ import {
 const VectorSearch = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState<any>(null);
+  
+  const { toast } = useToast();
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -100,6 +106,21 @@ const VectorSearch = () => {
     return "bg-muted/20 border-muted/30";
   };
 
+  const handleApplyFilters = (filters: any) => {
+    setAppliedFilters(filters);
+    toast({
+      title: "Filters Applied",
+      description: "Search results will be updated with your filter criteria",
+    });
+  };
+
+  const handleApplySolution = (result: any) => {
+    toast({
+      title: "Solution Applied",
+      description: `Applying resolution from incident ${result.incident} to current situation`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       
@@ -133,17 +154,18 @@ const VectorSearch = () => {
             />
           </div>
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Advanced Filters
-              </Button>
-              <Badge variant="secondary" className="text-xs">
-                <Sparkles className="h-3 w-3 mr-1" />
-                AI Enhanced
-              </Badge>
-            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" onClick={() => setShowAdvancedFilters(true)}>
+                  <Filter className="h-4 w-4 mr-2" />
+                  Advanced Filters
+                  {appliedFilters && <Badge variant="secondary" className="ml-1 text-xs">Active</Badge>}
+                </Button>
+                <Badge variant="secondary" className="text-xs">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  AI Enhanced
+                </Badge>
+              </div>
             <Button 
               onClick={handleSearch}
               disabled={!searchQuery.trim() || isSearching}
@@ -222,7 +244,7 @@ const VectorSearch = () => {
                         <Button size="sm" variant="outline">
                           View Full Details
                         </Button>
-                        <Button size="sm" className="glow-primary">
+                        <Button size="sm" className="glow-primary" onClick={() => handleApplySolution(result)}>
                           Apply Solution
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </Button>
@@ -300,6 +322,13 @@ const VectorSearch = () => {
 
         </div>
       </div>
+
+      {/* Modals */}
+      <AdvancedFiltersModal 
+        open={showAdvancedFilters} 
+        onOpenChange={setShowAdvancedFilters}
+        onApplyFilters={handleApplyFilters}
+      />
     </div>
   );
 };

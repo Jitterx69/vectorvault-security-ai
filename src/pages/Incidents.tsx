@@ -3,6 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import CreateIncidentModal from "@/components/modals/CreateIncidentModal";
+import IncidentDetailsModal from "@/components/modals/IncidentDetailsModal";
+import { useToast } from "@/hooks/use-toast";
 import { 
   AlertTriangle, 
   Clock, 
@@ -20,6 +24,13 @@ import {
 const Incidents = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSeverity, setFilterSeverity] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [showCreateIncident, setShowCreateIncident] = useState(false);
+  const [showIncidentDetails, setShowIncidentDetails] = useState(false);
+  const [selectedIncident, setSelectedIncident] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  const { toast } = useToast();
 
   const incidents = [
     {
@@ -100,6 +111,46 @@ const Incidents = () => {
     }
   };
 
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast({
+        title: "Data Refreshed",
+        description: "Incident data has been updated with the latest information",
+      });
+    }, 1500);
+  };
+
+  const handleExport = () => {
+    toast({
+      title: "Export Started",
+      description: "Incidents data is being exported to CSV format",
+    });
+  };
+
+  const handleViewDetails = (incident: any) => {
+    setSelectedIncident(incident);
+    setShowIncidentDetails(true);
+  };
+
+  const handleInvestigate = (incident: any) => {
+    toast({
+      title: "Investigation Started",
+      description: `Investigation workflow initiated for incident ${incident.id}`,
+    });
+  };
+
+  const filteredIncidents = incidents.filter(incident => {
+    const matchesSearch = incident.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         incident.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         incident.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSeverity = filterSeverity === "all" || incident.severity === filterSeverity;
+    const matchesStatus = filterStatus === "all" || incident.status === filterStatus;
+    
+    return matchesSearch && matchesSeverity && matchesStatus;
+  });
+
   return (
     <div className="space-y-6">
       
@@ -112,12 +163,12 @@ const Incidents = () => {
           <p className="text-muted-foreground">Incident management and response coordination</p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button className="glow-primary">
+          <Button className="glow-primary" onClick={() => setShowCreateIncident(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Create Incident
           </Button>
-          <Button variant="outline">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
@@ -195,11 +246,31 @@ const Incidents = () => {
               />
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-              <Button variant="outline" size="sm">
+              <Select value={filterSeverity} onValueChange={setFilterSeverity}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Severity</SelectItem>
+                  <SelectItem value="Critical">Critical</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Investigating">Investigating</SelectItem>
+                  <SelectItem value="Contained">Contained</SelectItem>
+                  <SelectItem value="Resolved">Resolved</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={handleExport}>
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
@@ -210,7 +281,21 @@ const Incidents = () => {
 
       {/* Incidents List */}
       <div className="space-y-4">
-        {incidents.map((incident) => (
+        {filteredIncidents.length === 0 ? (
+          <Card className="card-gradient border-border/50 text-center p-12">
+            <div className="flex flex-col items-center space-y-4">
+              <Search className="h-12 w-12 text-muted-foreground" />
+              <h3 className="text-xl font-semibold">No incidents found</h3>
+              <p className="text-muted-foreground">
+                {searchTerm || filterSeverity !== "all" || filterStatus !== "all" 
+                  ? "Try adjusting your search or filter criteria"
+                  : "No incidents match the current criteria"
+                }
+              </p>
+            </div>
+          </Card>
+        ) : (
+          filteredIncidents.map((incident) => (
           <Card key={incident.id} className="card-gradient border-border/50 hover:border-primary/30 transition-colors">
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
@@ -243,11 +328,11 @@ const Incidents = () => {
                   <span>Updated: {incident.updated}</span>
                 </div>
                 <div className="flex space-x-2">
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" onClick={() => handleViewDetails(incident)}>
                     <Eye className="h-4 w-4 mr-2" />
                     View Details
                   </Button>
-                  <Button size="sm" className="glow-primary">
+                  <Button size="sm" className="glow-primary" onClick={() => handleInvestigate(incident)}>
                     <Shield className="h-4 w-4 mr-2" />
                     Investigate
                   </Button>
@@ -255,8 +340,20 @@ const Incidents = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))
+        )}
       </div>
+
+      {/* Modals */}
+      <CreateIncidentModal 
+        open={showCreateIncident} 
+        onOpenChange={setShowCreateIncident} 
+      />
+      <IncidentDetailsModal 
+        open={showIncidentDetails} 
+        onOpenChange={setShowIncidentDetails}
+        incident={selectedIncident}
+      />
     </div>
   );
 };

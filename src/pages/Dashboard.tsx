@@ -1,6 +1,9 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import GenerateReportModal from "@/components/modals/GenerateReportModal";
 import { 
   Shield, 
   AlertTriangle, 
@@ -17,6 +20,8 @@ import {
 } from "lucide-react";
 
 const Dashboard = () => {
+  const [showGenerateReport, setShowGenerateReport] = useState(false);
+  const navigate = useNavigate();
   const criticalIncidents = [
     { id: "INC-2024-001", type: "DDoS Attack", severity: "Critical", time: "2 mins ago", status: "Active" },
     { id: "INC-2024-002", type: "Suspicious Login", severity: "High", time: "15 mins ago", status: "Investigating" },
@@ -121,11 +126,11 @@ const Dashboard = () => {
               ))}
             </div>
             <div className="flex space-x-2 mt-4">
-              <Button size="sm" className="glow-primary">
+              <Button size="sm" className="glow-primary" onClick={() => navigate("/incidents")}>
                 <Eye className="h-4 w-4 mr-2" />
                 View All Incidents
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => navigate("/ai-analysis")}>
                 <Search className="h-4 w-4 mr-2" />
                 AI Analysis
               </Button>
@@ -142,19 +147,19 @@ const Dashboard = () => {
               <CardTitle className="text-lg">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start" variant="outline">
+              <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/vector-search")}>
                 <Search className="h-4 w-4 mr-2" />
                 Vector Search
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/ai-analysis")}>
                 <Zap className="h-4 w-4 mr-2" />
                 AI Analysis
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/system-logs")}>
                 <Database className="h-4 w-4 mr-2" />
                 Query Logs
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button className="w-full justify-start" variant="outline" onClick={() => setShowGenerateReport(true)}>
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Generate Report
               </Button>
@@ -207,6 +212,12 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <GenerateReportModal 
+        open={showGenerateReport} 
+        onOpenChange={setShowGenerateReport} 
+      />
     </div>
   );
 };
