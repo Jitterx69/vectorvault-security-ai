@@ -18,8 +18,10 @@ import {
   AlertCircle,
   CheckCircle,
   Info,
-  XCircle
+  XCircle,
+  ChevronDown
 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const SystemLogs = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -144,10 +146,10 @@ const SystemLogs = () => {
     }, 1500);
   };
 
-  const handleExport = () => {
+  const handleExport = (format: string) => {
     toast({
       title: "Export Started",
-      description: "System logs are being exported in JSON format",
+      description: `System logs are being exported in ${format.toUpperCase()} format`,
     });
   };
 
@@ -184,10 +186,33 @@ const SystemLogs = () => {
           <p className="text-muted-foreground">Real-time log monitoring and analysis across all system components</p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <Download className="h-4 w-4 mr-2" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('json')}>
+                <Download className="h-4 w-4 mr-2" />
+                Export as JSON
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('xml')}>
+                <Download className="h-4 w-4 mr-2" />
+                Export as XML
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                <Download className="h-4 w-4 mr-2" />
+                Export as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
