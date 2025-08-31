@@ -175,7 +175,7 @@ const Incidents = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="card-gradient border-border/50">
+        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -189,7 +189,7 @@ const Incidents = () => {
           </CardContent>
         </Card>
 
-        <Card className="card-gradient border-border/50">
+        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -203,7 +203,7 @@ const Incidents = () => {
           </CardContent>
         </Card>
 
-        <Card className="card-gradient border-border/50">
+        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -217,7 +217,7 @@ const Incidents = () => {
           </CardContent>
         </Card>
 
-        <Card className="card-gradient border-border/50">
+        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>

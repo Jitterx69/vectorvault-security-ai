@@ -4,6 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import GenerateReportModal from "@/components/modals/GenerateReportModal";
+import NetworkHealthModal from "@/components/modals/NetworkHealthModal";
+import ServerLoadModal from "@/components/modals/ServerLoadModal";
+import ThreatLevelModal from "@/components/modals/ThreatLevelModal";
+import ActiveConnectionsModal from "@/components/modals/ActiveConnectionsModal";
 import { 
   Shield, 
   AlertTriangle, 
@@ -21,6 +25,10 @@ import {
 
 const Dashboard = () => {
   const [showGenerateReport, setShowGenerateReport] = useState(false);
+  const [showNetworkHealth, setShowNetworkHealth] = useState(false);
+  const [showServerLoad, setShowServerLoad] = useState(false);
+  const [showThreatLevel, setShowThreatLevel] = useState(false);
+  const [showActiveConnections, setShowActiveConnections] = useState(false);
   const navigate = useNavigate();
   const criticalIncidents = [
     { id: "INC-2024-001", type: "DDoS Attack", severity: "Critical", time: "2 mins ago", status: "Active" },
@@ -61,7 +69,16 @@ const Dashboard = () => {
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {systemMetrics.map((metric, index) => (
-          <Card key={index} className="card-gradient border-border/50">
+          <Card 
+            key={index} 
+            className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+            onClick={() => {
+              if (index === 0) setShowNetworkHealth(true);
+              else if (index === 1) setShowServerLoad(true);
+              else if (index === 2) setShowThreatLevel(true);
+              else if (index === 3) setShowActiveConnections(true);
+            }}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -217,6 +234,22 @@ const Dashboard = () => {
       <GenerateReportModal 
         open={showGenerateReport} 
         onOpenChange={setShowGenerateReport} 
+      />
+      <NetworkHealthModal 
+        open={showNetworkHealth} 
+        onOpenChange={setShowNetworkHealth} 
+      />
+      <ServerLoadModal 
+        open={showServerLoad} 
+        onOpenChange={setShowServerLoad} 
+      />
+      <ThreatLevelModal 
+        open={showThreatLevel} 
+        onOpenChange={setShowThreatLevel} 
+      />
+      <ActiveConnectionsModal 
+        open={showActiveConnections} 
+        onOpenChange={setShowActiveConnections} 
       />
     </div>
   );
