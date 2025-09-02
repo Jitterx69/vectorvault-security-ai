@@ -175,7 +175,16 @@ const Incidents = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+        <Card 
+          className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+          onClick={() => {
+            setFilterStatus("Active");
+            toast({
+              title: "Filter Applied",
+              description: "Showing active incidents only",
+            });
+          }}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -189,7 +198,15 @@ const Incidents = () => {
           </CardContent>
         </Card>
 
-        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+        <Card 
+          className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+          onClick={() => {
+            toast({
+              title: "Response Time Analytics",
+              description: "Average response time: 4.2 minutes. This includes detection, assignment, and initial response.",
+            });
+          }}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -203,7 +220,15 @@ const Incidents = () => {
           </CardContent>
         </Card>
 
-        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+        <Card 
+          className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+          onClick={() => {
+            toast({
+              title: "Resolution Statistics",
+              description: "94% resolution rate this month. 47 incidents resolved, 3 active, 2 pending.",
+            });
+          }}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -217,7 +242,15 @@ const Incidents = () => {
           </CardContent>
         </Card>
 
-        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+        <Card 
+          className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+          onClick={() => {
+            toast({
+              title: "Team Overview",
+              description: "12 active team members: 4 SOC analysts, 3 incident responders, 2 managers, 3 specialists.",
+            });
+          }}
+        >
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>

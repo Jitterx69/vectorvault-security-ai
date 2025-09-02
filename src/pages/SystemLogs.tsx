@@ -221,42 +221,93 @@ const SystemLogs = () => {
 
       {/* Log Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+        <Card 
+          className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+          onClick={() => {
+            toast({
+              title: "Total Log Overview",
+              description: `${logStats.total.toLocaleString()} logs processed today. Distribution: 92% Info, 6.7% Warnings, 1.3% Errors.`,
+            });
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold">{logStats.total.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">Total Logs</p>
           </CardContent>
         </Card>
         
-        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+        <Card 
+          className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+          onClick={() => {
+            setLogLevel("error");
+            toast({
+              title: "Error Filter Applied",
+              description: "Showing error-level logs only",
+            });
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-danger">{logStats.error}</p>
             <p className="text-xs text-muted-foreground">Errors</p>
           </CardContent>
         </Card>
         
-        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+        <Card 
+          className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+          onClick={() => {
+            setLogLevel("warn");
+            toast({
+              title: "Warning Filter Applied",
+              description: "Showing warning-level logs only",
+            });
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-warning">{logStats.warning.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">Warnings</p>
           </CardContent>
         </Card>
         
-        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+        <Card 
+          className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+          onClick={() => {
+            setLogLevel("info");
+            toast({
+              title: "Info Filter Applied", 
+              description: "Showing info-level logs only",
+            });
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-success">{logStats.info.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">Info</p>
           </CardContent>
         </Card>
         
-        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+        <Card 
+          className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+          onClick={() => {
+            toast({
+              title: "Source Analytics",
+              description: "12 active sources: 4 web servers, 3 databases, 2 firewalls, 1 load balancer, 2 other services.",
+            });
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold">{logStats.sources}</p>
             <p className="text-xs text-muted-foreground">Sources</p>
           </CardContent>
         </Card>
         
-        <Card className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer">
+        <Card 
+          className="card-gradient border-border/50 hover:border-primary/30 transition-colors cursor-pointer"
+          onClick={() => {
+            toast({
+              title: "Throughput Analytics",
+              description: `${logStats.avgPerMinute} logs/minute average. Peak: 127/min at 14:30. Current rate is normal.`,
+            });
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-primary">{logStats.avgPerMinute}</p>
             <p className="text-xs text-muted-foreground">Logs/Min</p>
