@@ -120,7 +120,6 @@ const Auth = () => {
           
           <div className="mt-6 text-center text-xs text-muted-foreground">
             <p>Secured By A.S.T.R.A</p>
-            <p>All access attempts are monitored and logged</p>
           </div>
         </CardContent>
       </Card>
