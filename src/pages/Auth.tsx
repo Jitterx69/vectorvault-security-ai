@@ -63,9 +63,6 @@ const Auth = () => {
             </div>
           </div>
           <CardTitle className="text-xl">Secure Access Portal</CardTitle>
-          <CardDescription>
-            Enter your security credentials to access the SOC dashboard
-          </CardDescription>
         </CardHeader>
         
         <CardContent>
