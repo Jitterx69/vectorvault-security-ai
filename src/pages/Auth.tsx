@@ -119,7 +119,7 @@ const Auth = () => {
           </form>
           
           <div className="mt-6 text-center text-xs text-muted-foreground">
-            <p>Security Level: CLASSIFIED</p>
+            <p>Secured By A.S.T.R.A</p>
             <p>All access attempts are monitored and logged</p>
           </div>
         </CardContent>
