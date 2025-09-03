@@ -58,7 +58,7 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
             Security Operations Center
           </h1>
-          <p className="text-muted-foreground">Real-time threat monitoring and incident response</p>
+          <p className="text-muted-foreground">Secured by A.S.T.R.A</p>
         </div>
         <div className="flex items-center space-x-2">
           <Badge variant="outline" className="status-success">System Online</Badge>
