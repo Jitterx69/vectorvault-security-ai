@@ -1,4 +1,4 @@
-# VectorVault - TiDB Serverless Integration
+# VectorVault - Advanced SOC Platform
 
 A modern AI-powered security operations center with vector search capabilities powered by TiDB Serverless.
 
