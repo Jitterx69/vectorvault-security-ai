@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import AdvancedFiltersModal from "@/components/modals/AdvancedFiltersModal";
 import { useToast } from "@/hooks/use-toast";
+import { useTiDBConnection, useVectorSearch, useSearchStats } from "@/hooks/use-tidb";
 import { 
   Search, 
   Database, 
@@ -16,81 +17,45 @@ import {
   ArrowRight,
   Clock,
   Target,
-  Crosshair
+  Crosshair,
+  AlertCircle,
+  CheckCircle
 } from "lucide-react";
 
 const VectorSearch = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<any>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   
   const { toast } = useToast();
+  const { isConnected, isConnecting, error: connectionError } = useTiDBConnection();
+  const { isSearching, searchResults, searchError, performSearch, clearSearch } = useVectorSearch();
+  const { stats, isLoading: statsLoading } = useSearchStats();
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     
-    setIsSearching(true);
-    // Simulate search delay
-    setTimeout(() => {
-      setIsSearching(false);
-    }, 2000);
+    // Add to recent searches
+    if (!recentSearches.includes(searchQuery)) {
+      setRecentSearches(prev => [searchQuery, ...prev.slice(0, 4)]);
+    }
+    
+    await performSearch(searchQuery, appliedFilters, 10);
   };
 
-  const searchResults = [
-    {
-      id: "result-1",
-      similarity: 0.94,
-      incident: "INC-2023-847",
-      title: "DDoS Attack on Web Infrastructure",
-      description: "Large-scale distributed denial-of-service attack targeting main web servers with traffic volume exceeding 10Gbps",
-      timestamp: "2023-12-15 09:22",
-      resolution: "Implemented rate limiting and activated DDoS protection service",
-      tags: ["ddos", "web-infrastructure", "high-volume", "resolved"],
-      category: "Network Security"
-    },
-    {
-      id: "result-2", 
-      similarity: 0.87,
-      incident: "INC-2023-701",
-      title: "Volumetric Attack on API Gateway",
-      description: "High-volume HTTP requests targeting API endpoints causing service degradation",
-      timestamp: "2023-11-28 14:15",
-      resolution: "Applied traffic filtering rules and scaled infrastructure",
-      tags: ["api", "volumetric-attack", "scaling", "resolved"],
-      category: "Application Security"
-    },
-    {
-      id: "result-3",
-      similarity: 0.82,
-      incident: "INC-2023-623",
-      title: "Network Flooding Attack",
-      description: "UDP flood attack targeting network infrastructure with malformed packets",
-      timestamp: "2023-10-12 11:30",
-      resolution: "Deployed upstream filtering and blacklisted source IPs",
-      tags: ["udp-flood", "network", "filtering", "resolved"],
-      category: "Infrastructure Security"
-    },
-    {
-      id: "result-4",
-      similarity: 0.75,
-      incident: "INC-2023-445", 
-      title: "Suspicious Traffic Patterns",
-      description: "Unusual traffic patterns detected with characteristics similar to reconnaissance activity",
-      timestamp: "2023-09-08 16:45",
-      resolution: "Enhanced monitoring and implemented behavioral analysis",
-      tags: ["reconnaissance", "traffic-analysis", "monitoring", "resolved"], 
-      category: "Threat Intelligence"
+  // Initialize with some default recent searches
+  useEffect(() => {
+    if (recentSearches.length === 0) {
+      setRecentSearches([
+        "SQL injection attempts database compromise",
+        "Malware detection email gateway",
+        "Brute force authentication failure",
+        "Data exfiltration suspicious activity",
+        "Phishing campaign user credentials"
+      ]);
     }
-  ];
-
-  const recentSearches = [
-    "SQL injection attempts database compromise",
-    "Malware detection email gateway",
-    "Brute force authentication failure",
-    "Data exfiltration suspicious activity",
-    "Phishing campaign user credentials"
-  ];
+  }, [recentSearches.length]);
 
   const getSimilarityColor = (similarity: number) => {
     if (similarity >= 0.9) return "text-success";
@@ -114,6 +79,11 @@ const VectorSearch = () => {
     });
   };
 
+  const handleClearSearch = () => {
+    clearSearch();
+    setSearchQuery("");
+  };
+
   const handleApplySolution = (result: any) => {
     toast({
       title: "Solution Applied",
@@ -130,6 +100,26 @@ const VectorSearch = () => {
           Vector Search Engine
         </h1>
         <p className="text-muted-foreground">AI-powered similarity search across historical incidents and security data</p>
+        
+        {/* Connection Status */}
+        <div className="mt-4 flex items-center space-x-2">
+          {isConnecting ? (
+            <Badge variant="outline" className="flex items-center space-x-1">
+              <div className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              <span>Connecting to TiDB...</span>
+            </Badge>
+          ) : isConnected ? (
+            <Badge variant="outline" className="flex items-center space-x-1 text-success">
+              <CheckCircle className="h-3 w-3" />
+              <span>Connected to TiDB Serverless</span>
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="flex items-center space-x-1 text-warning">
+              <AlertCircle className="h-3 w-3" />
+              <span>Mock Mode - No Database Connection</span>
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Search Interface */}
@@ -168,7 +158,7 @@ const VectorSearch = () => {
               </div>
             <Button 
               onClick={handleSearch}
-              disabled={!searchQuery.trim() || isSearching}
+              disabled={!searchQuery.trim() || isSearching || !isConnected}
               className="glow-primary"
             >
               {isSearching ? (
@@ -191,13 +181,31 @@ const VectorSearch = () => {
         
         {/* Search Results */}
         <div className="lg:col-span-3 space-y-4">
+          {searchError && (
+            <Card className="card-gradient border-destructive/50">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2 text-destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Search Error: {searchError}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {searchQuery && (
             <>
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Search Results</h2>
-                <Badge variant="outline" className="status-success">
-                  {searchResults.length} matches found
-                </Badge>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="status-success">
+                    {searchResults.length} matches found
+                  </Badge>
+                  {searchResults.length > 0 && (
+                    <Button size="sm" variant="outline" onClick={handleClearSearch}>
+                      Clear Results
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {searchResults.map((result) => (
@@ -207,9 +215,9 @@ const VectorSearch = () => {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="text-lg font-semibold">{result.title}</h3>
-                          <Badge variant="outline" className={getSimilarityBg(result.similarity)}>
+                          <Badge variant="outline" className={getSimilarityBg(result.similarity || 0)}>
                             <Crosshair className="h-3 w-3 mr-1" />
-                            {Math.round(result.similarity * 100)}% match
+                            {Math.round((result.similarity || 0) * 100)}% match
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mb-3">{result.description}</p>
@@ -226,20 +234,20 @@ const VectorSearch = () => {
                           ))}
                         </div>
                       </div>
-                      <div className={`text-right ml-4 font-mono text-2xl font-bold ${getSimilarityColor(result.similarity)}`}>
-                        {Math.round(result.similarity * 100)}%
+                      <div className={`text-right ml-4 font-mono text-2xl font-bold ${getSimilarityColor(result.similarity || 0)}`}>
+                        {Math.round((result.similarity || 0) * 100)}%
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <span>ID: {result.incident}</span>
-                        <span>Category: {result.category}</span>
-                        <span className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {result.timestamp}
-                        </span>
-                      </div>
+                                              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <span>ID: {result.id}</span>
+                          <span>Category: {result.category}</span>
+                          <span className="flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {result.timestamp}
+                          </span>
+                        </div>
                       <div className="flex space-x-2">
                         <Button size="sm" variant="outline">
                           View Full Details
@@ -301,22 +309,34 @@ const VectorSearch = () => {
               <CardTitle className="text-lg">Search Statistics</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Total Incidents</span>
-                <span className="font-semibold">2,847</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Indexed Vectors</span>
-                <span className="font-semibold">15.2K</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Search Accuracy</span>
-                <span className="font-semibold text-success">97.3%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Avg Response Time</span>
-                <span className="font-semibold">0.24s</span>
-              </div>
+              {statsLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                </div>
+              ) : stats ? (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Total Incidents</span>
+                    <span className="font-semibold">{stats.totalIncidents.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Indexed Vectors</span>
+                    <span className="font-semibold">{stats.indexedVectors.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Search Accuracy</span>
+                    <span className="font-semibold text-success">{stats.searchAccuracy}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Avg Response Time</span>
+                    <span className="font-semibold">{stats.avgResponseTime}s</span>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center text-muted-foreground py-4">
+                  No statistics available
+                </div>
+              )}
             </CardContent>
           </Card>
 
