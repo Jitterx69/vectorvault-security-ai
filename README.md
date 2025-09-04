@@ -1,4 +1,4 @@
-# Incident Guard AI - TiDB Serverless Integration
+# VectorVault - TiDB Serverless Integration
 
 A modern AI-powered security operations center with vector search capabilities powered by TiDB Serverless.
 
